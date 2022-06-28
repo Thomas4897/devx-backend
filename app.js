@@ -19,6 +19,7 @@ mongoose
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users/usersRouter');
+const AuthorizationService = require('./utils/AuthorizationService');
 
 var app = express();
 
@@ -32,6 +33,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(AuthorizationService.checkAuth);
+
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);

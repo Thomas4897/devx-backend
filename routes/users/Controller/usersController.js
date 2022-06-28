@@ -1,41 +1,67 @@
 const { v4: uuidv4 } = require('uuid');
 const User = require("../Model/User")
-const bcrypt = require('bcryptjs');
+// const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
-const getUser = async (req, res) => {
-  //! All of the logic on how to get the product
+
+const cleanUser = (userDocument) => {
+  return {
+      id: userDocument.id,
+      firstName: userDocument.firstName,
+      lastName: userDocument.lastName,
+      email: userDocument.email,
+      // isAdmin: userDocument.isAdmin,
+  }
+}
+
+const getToken = (userId) => {
+  //! Generate a token that he user can use to indicate that they are logged in
+  //* 'iat' stands for issued at time
+  const token = jwt.sign({ userId, iat: Date.now() }, process.env.JWT_SECRET_KEY);
+
+  //! provide that token to the client
+  return token;
+};
+
+const signIn = async (req, res, next) => {
+
   try {
-    const { email, password } = req.params;
+      const {
+          email,
+          password
+      } = req.body.credentials
 
-    //! fetches data from the db
-    const foundUser = await User.findOne({ email: email });
+      const foundUser = await User.findOne({ email: email })
 
-    if (!foundUser) {
-      throw {
-        message: "Email not found",
-      };
-    }
+      // console.log('user:', foundUser)
 
-    const comparedPassword = await bcrypt.compare(password, foundUser.password);
- 
-    if (!comparedPassword) {
-      throw {
-        message: "Email and Password do not match",
-      };
-    }
-    // res.send({foundUser: foundUser});
-    res.status(200).json({
-      message: "User Successfully Logged In.",
-      payload: foundUser,
-    });
+      if(!foundUser) {
+
+          return res.status(401).json({error: "User not found"})
+      }
+
+      //! If user is found check the password
+      const passwordMatch = await bcrypt.compare(password, foundUser.password);
+      console.log('passwordMatch:', passwordMatch)
+      if(!passwordMatch) {
+          return res.status(401).json({error: "User and Password do not match"})
+      }
+
+      const token = getToken(foundUser._id)
+
+      // console.log('token:', token),
+
+      res.cookie('session_token', token),
+
+      res.send({ user: cleanUser(foundUser) })
   } catch (error) {
-    res.send({
-      error: error.message
-    });
+      console.log("error:", error)
+      res.send({
+          message: error.message,
+          error: error,
+      })
 
-    // res.status(500).json({
-    //   error: error.message
-    // });
   }
 };
 
@@ -51,7 +77,7 @@ const getAllUsers = async (req, res, next) => {
   }
 };
 
-const createUser = async (req, res) => {
+const createUser = async (req, res, next) => {
   try {
     const { firstName, lastName, email, password } = req.body;
     const foundUser = await User.findOne({ email: email });
@@ -91,7 +117,7 @@ const createUser = async (req, res) => {
 };
 
 module.exports = {
-  getUser,
+  signIn,
   getAllUsers,
   createUser,
 }
