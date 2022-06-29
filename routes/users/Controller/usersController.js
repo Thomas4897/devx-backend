@@ -11,6 +11,7 @@ const cleanUser = (userDocument) => {
       firstName: userDocument.firstName,
       lastName: userDocument.lastName,
       email: userDocument.email,
+      image: userDocument.image
       // isAdmin: userDocument.isAdmin,
   }
 }
@@ -26,7 +27,7 @@ const getToken = (userId) => {
 
 const createUser = async (req, res, next) => {
   try {
-    const { firstName, lastName, email, password } = req.body;
+    const { firstName, lastName, image, email, password } = req.body;
     const foundUser = await User.findOne({ email: email });
 
     let salt = await bcrypt.genSalt(10);
@@ -38,6 +39,7 @@ const createUser = async (req, res, next) => {
         id: uuidv4(),
         firstName: firstName,
         lastName: lastName,
+        image: image,
         email: email,
         password: hashedPassword,
       });

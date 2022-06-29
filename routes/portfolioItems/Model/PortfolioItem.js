@@ -11,7 +11,7 @@ const portfolioItemSchema = new mongoose.Schema(
     description: { type: String, required: true },
     author: {
       authorName: { type: String, required: true },
-      authorImage: { type: String, required: true, default: () => "none"},
+      authorImage: { type: String, required: true, default: () => null},
     }
 
 

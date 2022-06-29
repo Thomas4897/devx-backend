@@ -7,7 +7,7 @@ const PortfolioItem = require('../Model/PortfolioItem');
 
 
 const cleanPortfolioItem = (userDocument) => {
-  return {
+  return { 
     id: userDocument.id,
     firstName: userDocument.firstName,
     lastName: userDocument.lastName,
@@ -34,17 +34,15 @@ const createPortfolioItem = async (req, res, next) => {
       description,
     } = req.body.portfolioItem;
 
-    const {
-      authorName,
-      authorImage,
-    } = req.body.portfolioItem.author;
+    // const {
+    //   authorName,
+    //   authorImage,
+    // } = req.body.portfolioItem.author;
 
-    const userId = req.body.userId
+    const userId = req.user.id;
 
     const foundUser = await User.findOne({ id: userId });
-
-    // let salt = await bcrypt.genSalt(10);
-    // let hashedPassword = await bcrypt.hash(password, salt);
+    console.log('foundUser:', foundUser.image)
 
     // Creating a New User Object;
     if (foundUser) {
@@ -58,9 +56,11 @@ const createPortfolioItem = async (req, res, next) => {
         description: description,
         author: {
           authorName: foundUser.firstName + " " + foundUser.lastName,
-          authorImage: authorImage,
+          authorImage: foundUser.image,
         }
       });
+
+      console.log('newPortfolioItem',newPortfolioItem)
 
       // Use .save() to save new user object to DB
       let savedPortfolioItem = await newPortfolioItem.save();
@@ -78,7 +78,8 @@ const createPortfolioItem = async (req, res, next) => {
       });
     } else {
       res.status(200).json({
-        message: "Email already exists.",
+        message: "An Error has occured.",
+
       });
     }
 
@@ -110,7 +111,7 @@ const getUserPortfolioItems = async (req, res, next) => {
   try {
     //! fetches data from the db
     const foundPortfolioItems = await PortfolioItem.find({ userId: userId });
-
+    console.log('foundPortfolioItems:', foundPortfolioItems)
     res.send(foundPortfolioItems);
   } catch (error) {
     console.log('error', error);
