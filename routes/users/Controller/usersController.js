@@ -24,6 +24,49 @@ const getToken = (userId) => {
   return token;
 };
 
+const createUser = async (req, res, next) => {
+  try {
+    const { firstName, lastName, email, password } = req.body;
+    const foundUser = await User.findOne({ email: email });
+
+    let salt = await bcrypt.genSalt(10);
+    let hashedPassword = await bcrypt.hash(password, salt);
+
+    // Creating a New User Object;
+    if (foundUser === null) {
+      let newUser = new User({
+        id: uuidv4(),
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        password: hashedPassword,
+      });
+
+      // Use .save() to save new user object to DB
+      let savedUser = await newUser.save();
+
+      const token = getToken(savedUser._id)
+
+      res.cookie('session_token', token)
+      // console.log('savedUser:', cleanUser(savedUser));
+      res.status(200).json({
+        message: "User Successfully Created.",
+        payload: { user: cleanUser(savedUser) },
+      });
+    } else {
+      res.status(200).json({
+        message: "Email already exists.",
+      });
+    }
+
+    // res.redirect("/login-form");
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
 const signIn = async (req, res, next) => {
 
   try {
@@ -53,6 +96,7 @@ const signIn = async (req, res, next) => {
       // console.log('token:', token),
 
       res.cookie('session_token', token),
+      // console.log('session_token', token);
 
       res.send({ user: cleanUser(foundUser) })
   } catch (error) {
@@ -64,6 +108,14 @@ const signIn = async (req, res, next) => {
 
   }
 };
+
+const signOut = (req, res, next) => {
+  try {
+      res.clearCookie('session_token', { httpOnly: true, secure: false}).send('Signed out');
+  } catch (error) {
+      console.log('error:', error);
+  }
+}
 
 const getAllUsers = async (req, res, next) => {
   //! All of the logic on how to get the product
@@ -77,47 +129,9 @@ const getAllUsers = async (req, res, next) => {
   }
 };
 
-const createUser = async (req, res, next) => {
-  try {
-    const { firstName, lastName, email, password } = req.body;
-    const foundUser = await User.findOne({ email: email });
-
-    let salt = await bcrypt.genSalt(10);
-    let hashedPassword = await bcrypt.hash(password, salt);
-
-    // Creating a New User Object;
-    if (foundUser === null) {
-      let newUser = new User({
-        id: uuidv4(),
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
-        password: hashedPassword,
-      });
-
-      // Use .save() to save new user object to DB
-      let savedUser = await newUser.save();
-
-      res.status(200).json({
-        message: "User Successfully Created.",
-        payload: savedUser,
-      });
-    } else {
-      res.status(200).json({
-        message: "Email already exists.",
-      });
-    }
-
-    // res.redirect("/login-form");
-  } catch (error) {
-    res.status(500).json({
-      error: error.message,
-    });
-  }
-};
-
 module.exports = {
   signIn,
+  signOut,
   getAllUsers,
   createUser,
 }
