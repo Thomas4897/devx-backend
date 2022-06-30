@@ -7,7 +7,7 @@ const PortfolioItem = require('../Model/PortfolioItem');
 
 
 const cleanPortfolioItem = (userDocument) => {
-  return { 
+  return {
     id: userDocument.id,
     firstName: userDocument.firstName,
     lastName: userDocument.lastName,
@@ -34,15 +34,10 @@ const createPortfolioItem = async (req, res, next) => {
       description,
     } = req.body.portfolioItem;
 
-    // const {
-    //   authorName,
-    //   authorImage,
-    // } = req.body.portfolioItem.author;
-
     const userId = req.user.id;
 
     const foundUser = await User.findOne({ id: userId });
-    console.log('foundUser:', foundUser.image)
+    // console.log('foundUser:', foundUser.image)
 
     // Creating a New User Object;
     if (foundUser) {
@@ -60,18 +55,12 @@ const createPortfolioItem = async (req, res, next) => {
         }
       });
 
-      console.log('newPortfolioItem',newPortfolioItem)
+      // console.log('newPortfolioItem', newPortfolioItem)
 
-      // Use .save() to save new user object to DB
       let savedPortfolioItem = await newPortfolioItem.save();
       foundUser.portfolioItems.push(newPortfolioItem.id)
       foundUser.save()
-      // console.log(foundUser);
 
-      // const token = getToken(savedUser._id)
-
-      // res.cookie('session_token', token)
-      // console.log('savedUser:', cleanUser(savedUser));
       res.status(200).json({
         message: "PortfolioItem Successfully Created.",
         payload: { portfolioItem: savedPortfolioItem },
@@ -83,7 +72,6 @@ const createPortfolioItem = async (req, res, next) => {
       });
     }
 
-    // res.redirect("/login-form");
   } catch (error) {
     res.status(500).json({
       error: error.message,
@@ -94,10 +82,27 @@ const createPortfolioItem = async (req, res, next) => {
 const getAllPortfolioItems = async (req, res, next) => {
   //! All of the logic on how to get the product
   try {
-    //! fetches data from the db
-    const foundPortfolioItems = await PortfolioItem.find({});
+    const user = req.body.user;
+    // console.log('user:', user)
+    let foundPortfolioItems = await PortfolioItem.find({});
 
-    res.send(foundPortfolioItems);
+    if (user) {
+      //! fetches data from the db
+      const foundUser = await User.findOne({ id: user.id });
+      // console.log('foundUser:', foundUser.favorites)
+      // console.log("if working")
+      res.send({
+        userFavorites: foundUser.favorites,
+        foundPortfolioItems: foundPortfolioItems
+      });
+    } else {
+      //! fetches data from the db
+      console.log('else working')
+      res.send({
+        user: user,
+        foundPortfolioItems: foundPortfolioItems
+      });
+    }
   } catch (error) {
     console.log('error', error);
   }
@@ -111,7 +116,7 @@ const getUserPortfolioItems = async (req, res, next) => {
   try {
     //! fetches data from the db
     const foundPortfolioItems = await PortfolioItem.find({ userId: userId });
-    console.log('foundPortfolioItems:', foundPortfolioItems)
+    // console.log('foundPortfolioItems:', foundPortfolioItems)
     res.send(foundPortfolioItems);
   } catch (error) {
     console.log('error', error);

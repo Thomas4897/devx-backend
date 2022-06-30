@@ -7,12 +7,12 @@ const jwt = require('jsonwebtoken');
 
 const cleanUser = (userDocument) => {
   return {
-      id: userDocument.id,
-      firstName: userDocument.firstName,
-      lastName: userDocument.lastName,
-      email: userDocument.email,
-      image: userDocument.image
-      // isAdmin: userDocument.isAdmin,
+    id: userDocument.id,
+    firstName: userDocument.firstName,
+    lastName: userDocument.lastName,
+    email: userDocument.email,
+    image: userDocument.image
+    // isAdmin: userDocument.isAdmin,
   }
 }
 
@@ -72,68 +72,107 @@ const createUser = async (req, res, next) => {
 const signIn = async (req, res, next) => {
 
   try {
-      const {
-          email,
-          password
-      } = req.body.credentials
+    const {
+      email,
+      password
+    } = req.body.credentials
 
-      const foundUser = await User.findOne({ email: email })
+    const foundUser = await User.findOne({ email: email })
 
-      // console.log('user:', foundUser)
+    // console.log('user:', foundUser)
 
-      if(!foundUser) {
+    if (!foundUser) {
 
-          return res.status(401).json({error: "User not found"})
-      }
+      return res.status(401).json({ error: "User not found" })
+    }
 
-      //! If user is found check the password
-      const passwordMatch = await bcrypt.compare(password, foundUser.password);
-      console.log('passwordMatch:', passwordMatch)
-      if(!passwordMatch) {
-          return res.status(401).json({error: "User and Password do not match"})
-      }
+    //! If user is found check the password
+    const passwordMatch = await bcrypt.compare(password, foundUser.password);
+    console.log('passwordMatch:', passwordMatch)
+    if (!passwordMatch) {
+      return res.status(401).json({ error: "User and Password do not match" })
+    }
 
-      const token = getToken(foundUser._id)
+    const token = getToken(foundUser._id)
 
-      // console.log('token:', token),
-
-      res.cookie('session_token', token),
-      // console.log('session_token', token);
+    res.cookie('session_token', token),
 
       res.send({ user: cleanUser(foundUser) })
   } catch (error) {
-      console.log("error:", error)
-      res.send({
-          message: error.message,
-          error: error,
-      })
+    console.log("error:", error)
+    res.send({
+      message: error.message,
+      error: error,
+    })
 
   }
 };
 
 const signOut = (req, res, next) => {
   try {
-      res.clearCookie('session_token', { httpOnly: true, secure: false}).send('Signed out');
+    res.clearCookie('session_token', { httpOnly: true, secure: false }).send('Signed out');
   } catch (error) {
-      console.log('error:', error);
+    console.log('error:', error);
   }
 }
 
 const getAllUsers = async (req, res, next) => {
   //! All of the logic on how to get the product
   try {
-      //! fetches data from the db
-      const foundUsers = await User.find({});
-     
-      res.send(foundUsers);
+    //! fetches data from the db
+    const foundUsers = await User.find({});
+
+    res.send(foundUsers);
   } catch (error) {
-      console.log('error', error);
+    console.log('error', error);
   }
 };
+
+const addToUserFavorites = async (req, res, next) => {
+  try {
+    const portfolioItemId = req.body.portfolioItemId;
+
+    const userId = req.user.id;
+
+    let foundUser = await User.findOne({ id: userId });
+
+    // Creating a New User Object;
+    if (foundUser) {
+
+      if (foundUser.favorites.includes(portfolioItemId)) {
+        const updatedUserFavorites = foundUser.favorites.filter((e) => e !== portfolioItemId)
+
+        foundUser.favorites = updatedUserFavorites
+        await foundUser.save();
+
+        res.status(200).json({
+          message: "Removed from favorites",
+        });
+      } else {
+        foundUser.favorites.push(portfolioItemId)
+        foundUser.save()
+
+        res.status(200).json({
+          message: "Saved to favorites",
+        });
+      }
+    } else {
+      res.status(200).json({
+        message: "An Error has occured.",
+
+      });
+    }
+
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+}
 
 module.exports = {
   signIn,
   signOut,
-  getAllUsers,
   createUser,
+  addToUserFavorites,
 }

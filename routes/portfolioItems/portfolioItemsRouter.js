@@ -18,7 +18,7 @@ router.post("/create-portfolio-item", createPortfolioItem);
 
 // router.post("/sign-in", signIn);
 
-router.get("/get-all-portfolio-items", getAllPortfolioItems);
+router.post("/get-all-portfolio-items", getAllPortfolioItems);
 
 router.post("/get-user-portfolio-items", getUserPortfolioItems);
 
