@@ -1,20 +1,17 @@
 const { v4: uuidv4 } = require('uuid');
 const User = require("../../users/Model/User")
-// const bcrypt = require('bcryptjs');
-// const bcrypt = require('bcrypt');
-// const jwt = require('jsonwebtoken');
 const PortfolioItem = require('../Model/PortfolioItem');
 
 
-const cleanPortfolioItem = (userDocument) => {
-  return {
-    id: userDocument.id,
-    firstName: userDocument.firstName,
-    lastName: userDocument.lastName,
-    email: userDocument.email,
-    // isAdmin: userDocument.isAdmin,
-  }
-}
+// const cleanPortfolioItem = (userDocument) => {
+//   return {
+//     id: userDocument.id,
+//     firstName: userDocument.firstName,
+//     lastName: userDocument.lastName,
+//     email: userDocument.email,
+//     isAdmin: userDocument.isAdmin,
+//   }
+// }
 
 const getToken = (userId) => {
   //! Generate a token that he user can use to indicate that they are logged in
@@ -37,7 +34,6 @@ const createPortfolioItem = async (req, res, next) => {
     const userId = req.user.id;
 
     const foundUser = await User.findOne({ id: userId });
-    // console.log('foundUser:', foundUser.image)
 
     // Creating a New User Object;
     if (foundUser) {
@@ -54,8 +50,6 @@ const createPortfolioItem = async (req, res, next) => {
           authorImage: foundUser.image,
         }
       });
-
-      // console.log('newPortfolioItem', newPortfolioItem)
 
       let savedPortfolioItem = await newPortfolioItem.save();
       foundUser.portfolioItems.push(newPortfolioItem.id)
@@ -83,14 +77,11 @@ const getAllPortfolioItems = async (req, res, next) => {
   //! All of the logic on how to get the product
   try {
     const user = req.body.user;
-    // console.log('user:', user)
     let foundPortfolioItems = await PortfolioItem.find({});
 
     if (user) {
       //! fetches data from the db
       const foundUser = await User.findOne({ id: user.id });
-      // console.log('foundUser:', foundUser.favorites)
-      // console.log("if working")
       res.send({
         userFavorites: foundUser.favorites,
         foundPortfolioItems: foundPortfolioItems
@@ -110,14 +101,25 @@ const getAllPortfolioItems = async (req, res, next) => {
 
 const getUserPortfolioItems = async (req, res, next) => {
 
-  const { userId } = req.body
+  const  userId  = req.user.id
+
+  // console.log('req.user:', req.user.id)
 
   //! All of the logic on how to get the product
   try {
     //! fetches data from the db
     const foundPortfolioItems = await PortfolioItem.find({ userId: userId });
     // console.log('foundPortfolioItems:', foundPortfolioItems)
-    res.send(foundPortfolioItems);
+    res.send({
+      foundPortfolioItems: foundPortfolioItems,
+      user: {
+        id: req.user.id,
+        firstName: req.user.firstName,
+        lastName: req.user.lastName,
+        email: req.user.email,
+        image: req.user.image,
+      }
+    });
   } catch (error) {
     console.log('error', error);
   }

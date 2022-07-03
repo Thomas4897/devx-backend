@@ -1,6 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
 const User = require("../Model/User")
-// const bcrypt = require('bcryptjs');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -50,7 +49,6 @@ const createUser = async (req, res, next) => {
       const token = getToken(savedUser._id)
 
       res.cookie('session_token', token)
-      // console.log('savedUser:', cleanUser(savedUser));
       res.status(200).json({
         message: "User Successfully Created.",
         payload: { user: cleanUser(savedUser) },
@@ -60,8 +58,6 @@ const createUser = async (req, res, next) => {
         message: "Email already exists.",
       });
     }
-
-    // res.redirect("/login-form");
   } catch (error) {
     res.status(500).json({
       error: error.message,
@@ -78,8 +74,6 @@ const signIn = async (req, res, next) => {
     } = req.body.credentials
 
     const foundUser = await User.findOne({ email: email })
-
-    // console.log('user:', foundUser)
 
     if (!foundUser) {
 
@@ -116,17 +110,17 @@ const signOut = (req, res, next) => {
   }
 }
 
-const getAllUsers = async (req, res, next) => {
-  //! All of the logic on how to get the product
-  try {
-    //! fetches data from the db
-    const foundUsers = await User.find({});
+// const getAllUsers = async (req, res, next) => {
+//   //! All of the logic on how to get the product
+//   try {
+//     //! fetches data from the db
+//     const foundUsers = await User.find({});
 
-    res.send(foundUsers);
-  } catch (error) {
-    console.log('error', error);
-  }
-};
+//     res.send(foundUsers);
+//   } catch (error) {
+//     console.log('error', error);
+//   }
+// };
 
 const addToUserFavorites = async (req, res, next) => {
   try {
@@ -147,6 +141,7 @@ const addToUserFavorites = async (req, res, next) => {
 
         res.status(200).json({
           message: "Removed from favorites",
+          favoritesData: foundUser.favorites
         });
       } else {
         foundUser.favorites.push(portfolioItemId)
@@ -154,6 +149,7 @@ const addToUserFavorites = async (req, res, next) => {
 
         res.status(200).json({
           message: "Saved to favorites",
+          favoritesData: foundUser.favorites
         });
       }
     } else {

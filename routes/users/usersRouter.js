@@ -1,6 +1,5 @@
 var express = require('express');
 var router = express.Router();
-// const { checkIsEmpty } = require("../../utils/checkIsEmpty")
 const { addToUserFavorites, createUser, signIn, signOut } = require("../users/Controller/usersController")
 
 /* GET users listing. */
