@@ -43,9 +43,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(AuthorizationService.checkAuth);
 
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
-app.use('/portfolioItems', portfolioItemsRouter);
+app.use('/api', indexRouter);
+app.use('/api/users', usersRouter);
+app.use('/api/portfolioItems', portfolioItemsRouter);
 
 
 // catch 404 and forward to error handler
